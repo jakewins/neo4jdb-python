@@ -4,16 +4,17 @@ from paver.easy import *
 from paver.setuputils import setup, find_packages
 
 setup(
-    name='neo4j',
-    version='0.0.1',
+    name='neo4jdb',
+    version='0.0.2',
     author='Jacob Hansson',
     author_email='jakewins@gmail.com',
     packages=find_packages(),
+    py_modules = ['setup'],
     include_package_data=True,
     install_requires=[],
-    url='',
+    url='https://github.com/jakewins/neo4jdb-python',
     description='DB API 2.0 driver for the Neo4j graph database.',
-    long_description=open('README.md').read(),
+    long_description=open('README').read(),
 )
 
 BUILD_DIR = 'build'
@@ -24,7 +25,6 @@ NEO4J_VERSION = '2.0.1'
 def sdist():
     """Overrides sdist to make sure that our setup.py is generated."""
     pass
-
 
 @task
 def start_server():
