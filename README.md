@@ -8,7 +8,6 @@ Implements the [Python DB API 2.0 for Neo4j](http://legacy.python.org/dev/peps/p
 
     connection = neo4j.connect("http://localhost:7474")
 
-    # Simple read statement
     cursor = connection.cursor()
     for name, age in cursor.execute("MATCH (n:User) RETURN n.name, n.age"):
         print name, age
