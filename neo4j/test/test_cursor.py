@@ -129,7 +129,7 @@ class TestCursor(unittest.TestCase):
         try:
             cursor.scroll(10)
             raise Exception("Should not have reached here.")
-        except IndexError, e:
+        except IndexError as e:
             # Then
             pass
 

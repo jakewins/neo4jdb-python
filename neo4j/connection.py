@@ -1,13 +1,16 @@
 
-import json, exceptions
-from urlparse import urlparse
+import json
 
 from neo4j.cursor import Cursor
 
 try:
     from http import client as http
+    from urllib.parse import urlparse
+    StandardError = Exception
 except:
     import httplib as http
+    from urlparse import urlparse
+    from exceptions import StandardError
 
 TX_ENDPOINT = "/db/data/transaction"
 
@@ -24,10 +27,10 @@ def default_error_handler(connection, cursor, errorclass, errorvalue):
 
 class Connection(object):
 
-    class Error(exceptions.StandardError):
+    class Error(StandardError):
         pass
 
-    class Warning(exceptions.StandardError):
+    class Warning(StandardError):
         pass
 
     class InterfaceError(Error):
@@ -66,7 +69,7 @@ class Connection(object):
         if self._tx != TX_ENDPOINT:
             self._http.request("POST", self._tx + "/commit" )
             self._tx = TX_ENDPOINT
-            response = json.load( self._http.getresponse() )
+            response = self._deserialize( self._http.getresponse() )
             self._handle_errors(response, self, None)
 
     def rollback(self):
@@ -74,7 +77,7 @@ class Connection(object):
         if self._tx != TX_ENDPOINT:
             self._http.request("DELETE", self._tx )
             self._tx = TX_ENDPOINT
-            response = json.load( self._http.getresponse() )
+            response = self._deserialize( self._http.getresponse() )
             self._handle_errors(response, self, None)
 
     def cursor(self):
@@ -83,7 +86,7 @@ class Connection(object):
 
     def close(self):
         self.messages = []
-        if self._http != None:
+        if hasattr(self, '_http') and self._http != None:
             self._http.close()
             self._http = None
 
@@ -106,11 +109,16 @@ class Connection(object):
         self._http.request("POST", self._tx, json.dumps( {'statements':payload} ) )
         
         http_response = self._http.getresponse()
-        response = json.load( http_response )
-        
-        self._handle_errors(response, cursor, cursor)
 
         if self._tx == TX_ENDPOINT:
             self._tx = http_response.getheader('Location')
 
-        return iter(response['results'])
+        response = self._deserialize( http_response )
+        self._handle_errors(response, cursor, cursor)
+
+        return response['results'][-1]
+
+    def _deserialize(self, response):
+        r = json.loads(response.read().decode('utf-8'))
+        print(r)
+        return r

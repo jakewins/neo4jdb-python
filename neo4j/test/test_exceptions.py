@@ -15,7 +15,7 @@ class TestExceptions(unittest.TestCase):
         try:
             cursor.execute("this is not valid syntax")
             raise Exception("Should not have reached here.")
-        except neo4j.ProgrammingError, e:
+        except neo4j.ProgrammingError as e:
             # Then
             self.assertEqual(str(e), "Neo.ClientError.Statement.InvalidSyntax: Invalid input \'t\': expected <init> (line 1, column 1)\n\"this is not valid syntax\"\n ^")
             self.assertEqual(cursor.messages, [(neo4j.ProgrammingError, "Neo.ClientError.Statement.InvalidSyntax: Invalid input \'t\': expected <init> (line 1, column 1)\n\"this is not valid syntax\"\n ^")])
@@ -25,8 +25,9 @@ class TestExceptions(unittest.TestCase):
         cursor = self.conn.cursor()
         try:
             cursor.execute("this is not valid syntax")
-        except neo4j.ProgrammingError, e:
+        except neo4j.ProgrammingError as e:
             pass
+        self.conn.rollback()
 
         # When
         cursor.execute("CREATE (n)")
