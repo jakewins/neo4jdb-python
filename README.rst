@@ -1,5 +1,5 @@
-.. image:: https://travis-ci.org/jakewins/neo4jdb-python.svg?branch=master   
-:target: https://travis-ci.org/jakewins/neo4jdb-python
+.. image:: https://travis-ci.org/jakewins/neo4jdb-python.svg?branch=master
+   :target: https://travis-ci.org/jakewins/neo4jdb-python
 
 =======
 Neo4jDB
