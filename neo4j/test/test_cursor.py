@@ -16,9 +16,9 @@ class TestCursor(unittest.TestCase):
 
         # Then
         self.assertEqual(cursor.description, [\
-            (u'hello', neo4j.MIXED, None, None, None, None, True),\
-            (u'str',   neo4j.MIXED, None, None, None, None, True),\
-            (u'3',     neo4j.MIXED, None, None, None, None, True)])
+            ('hello', neo4j.MIXED, None, None, None, None, True),\
+            ('str',   neo4j.MIXED, None, None, None, None, True),\
+            ('3',     neo4j.MIXED, None, None, None, None, True)])
 
     def test_positional_parameters(self):
         # Given
