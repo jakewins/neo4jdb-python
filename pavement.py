@@ -1,7 +1,12 @@
-import os, urllib, tarfile
+import os, tarfile
 from subprocess import call
 from paver.easy import *
 from paver.setuputils import setup, find_packages
+
+try:
+    from urllib.request import urlretrieve
+except:
+    from urllib import urlretrieve
 
 setup(
     name='neo4jdb',
@@ -33,7 +38,7 @@ def start_server():
 
     if not path(BUILD_DIR + '/neo4j-server.tar.gz').access(os.R_OK):
         print("Downloading Neo4j Server")
-        urllib.urlretrieve ("http://download.neo4j.org/artifact?edition=community&version=%s&distribution=tarball" % NEO4J_VERSION, BUILD_DIR + "/neo4j-server.tar.gz")
+        urlretrieve ("http://download.neo4j.org/artifact?edition=community&version=%s&distribution=tarball" % NEO4J_VERSION, BUILD_DIR + "/neo4j-server.tar.gz")
 
     if not path(BUILD_DIR + '/neo4j-server').access(os.R_OK):
         print("Unzipping Neo4j Server..")

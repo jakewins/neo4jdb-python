@@ -1,8 +1,13 @@
 
-import httplib, json, exceptions
+import json, exceptions
 from urlparse import urlparse
 
 from neo4j.cursor import Cursor
+
+try:
+    from http import client as http
+except:
+    import httplib as http
 
 TX_ENDPOINT = "/db/data/transaction"
 
@@ -53,7 +58,7 @@ class Connection(object):
     def __init__(self, dbUri):
         self.messages = []
         self.errorhandler = default_error_handler
-        self._http = httplib.HTTPConnection(urlparse(dbUri).netloc)
+        self._http = http.HTTPConnection(urlparse(dbUri).netloc)
         self._tx  = TX_ENDPOINT
 
     def commit(self):
