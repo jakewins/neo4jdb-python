@@ -29,7 +29,7 @@ class TestCursor(unittest.TestCase):
 
         # Then
         self.assertEqual(list(cursor.execute("MATCH (n:Params) RETURN n")),\
-            [({u'name': u'Bob'},)])
+            [({'name': 'Bob'},)])
 
     def test_named_parameters(self):
         # Given
@@ -40,7 +40,7 @@ class TestCursor(unittest.TestCase):
 
         # Then
         self.assertEqual(list(cursor.execute("MATCH (n:Params) RETURN n")),\
-            [({u'name': u'Bob'},)])
+            [({'name': 'Bob'},)])
 
     def test_fetch_one(self):
         # Given
