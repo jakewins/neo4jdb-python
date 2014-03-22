@@ -1,13 +1,14 @@
-.. image:: https://travis-ci.org/jakewins/neo4jdb-python.svg?branch=master
-   :target: https://travis-ci.org/jakewins/neo4jdb-python
-
 =======
 Neo4jDB
 =======
 
-Implements the Python DB API 2.0 for Neo4j.
+Implements the Python DB API 2.0 for Neo4j, compatible with pyth 2.6, 2.7, 3.2 and 3.3.
 
 http://legacy.python.org/dev/peps/pep-0249/
+
+.. image:: https://travis-ci.org/jakewins/neo4jdb-python.svg?branch=master
+   :target: https://travis-ci.org/jakewins/neo4jdb-python
+
 
 Installing
 ----------
