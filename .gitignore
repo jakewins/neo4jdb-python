@@ -4,3 +4,4 @@ dist
 .DS_store
 paver-minilib.zip
 __pycache__
+*.pyc

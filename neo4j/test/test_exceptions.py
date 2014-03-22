@@ -14,6 +14,7 @@ class TestExceptions(unittest.TestCase):
         # When
         try:
             cursor.execute("this is not valid syntax")
+            cursor.rowcount # Force client to talk to server
             raise Exception("Should not have reached here.")
         except neo4j.ProgrammingError as e:
             # Then
@@ -25,6 +26,7 @@ class TestExceptions(unittest.TestCase):
         cursor = self.conn.cursor()
         try:
             cursor.execute("this is not valid syntax")
+            cursor.rowcount # Force client to talk to server
         except neo4j.ProgrammingError as e:
             pass
         self.conn.rollback()

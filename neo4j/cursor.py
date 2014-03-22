@@ -3,36 +3,40 @@ import neo4j
 
 class Cursor(object):
 
-    def __init__( self, connection, execute_statements ):
+    def __init__( self, cursorid, connection, execute_statements ):
         self.connection = connection
         self.lastrowid = None
-        self.messages = []
         self.arraysize = 1
-        self.description = None
         self.errorhandler = connection.errorhandler
 
+        self._id = cursorid
+
+        self._pending = []
         self._execute = execute_statements
         self._rows = None
         self._rowcount = -1
         self._cursor = 0
+        self._messages = []
 
     def execute( self, statement, *args, **kwargs ):
         for i in range(len(args)):
             kwargs[i] = args[i]
 
-        self.messages = []
-        result = self._execute( self, [( statement, kwargs )] )
-        self._rows = result['data']
-        self._rowcount = len(self._rows)
-        self.description = [ (name, neo4j.MIXED, None, None, None, None, True) for name in result['columns'] ] 
+        self._messages = []
+        self._rows = None
+        self._rowcount = 0
+
+        self._pending.append((statement, kwargs))
         return self
 
     def fetchone(self):
+        self._execute_pending()
         row = self._rows[self._cursor]
         self._cursor += 1
         return tuple(row['row'])
 
     def fetchmany(self, size=None):
+        self._execute_pending()
         if size is None:
             size = self.arraysize
         result = [ tuple(r['row']) for r in self._rows[self._cursor:self._cursor + size] ]
@@ -40,11 +44,13 @@ class Cursor(object):
         return result
 
     def fetchall(self):
+        self._execute_pending()
         result = [ tuple(r['row']) for r in self._rows[self._cursor:] ]
         self._cursor += self.rowcount
         return result
 
     def __iter__(self):
+        self._execute_pending()
         return self
 
     def __next__(self):
@@ -57,6 +63,7 @@ class Cursor(object):
         return self.__next__()
 
     def scroll(self, value, mode='relative'):
+        self._execute_pending()
         if value < 0:
             raise connection.NotSupportedError()
         if mode == 'relative':
@@ -68,9 +75,23 @@ class Cursor(object):
             self._cursor = self.rowcount
             raise IndexError()
 
+    def close(self):
+        self.connection._cursors.discard(self)
+
+    @property
+    def description(self):
+        self._execute_pending()
+        return self._description
+
     @property
     def rowcount(self):
+        self._execute_pending()
         return self._rowcount
+
+    @property
+    def messages(self):
+        self._execute_pending()
+        return self._messages
 
     def nextset( self ):
         pass
@@ -82,8 +103,25 @@ class Cursor(object):
         pass
 
     def close(self):
-        self._result = None
         self._rows = None
         self._rowcount = -1
-        self.messages = []
-        self.description = None        
+        self._messages = []
+        self._description = None
+
+    def __del__(self):
+        self.close()
+
+    def __hash__(self):
+        return self._id
+
+    def __eq__(self, other):
+        return self._id == other._id
+
+    def _execute_pending(self):
+        if len(self._pending) > 0:
+            pending = self._pending
+            self._pending = []
+            result = self._execute( self, pending )
+            self._rows = result['data']
+            self._rowcount = len(self._rows)
+            self._description = [ (name, neo4j.MIXED, None, None, None, None, True) for name in result['columns'] ]

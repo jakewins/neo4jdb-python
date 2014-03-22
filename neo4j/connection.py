@@ -57,23 +57,30 @@ class Connection(object):
     class NotSupportedError(DatabaseError):
         pass    
 
-
     def __init__(self, dbUri):
-        self.messages = []
         self.errorhandler = default_error_handler
         self._http = http.HTTPConnection(urlparse(dbUri).netloc)
         self._tx  = TX_ENDPOINT
+        self._messages = []
+        self._cursors = set()
+        self._cursor_ids = 0
 
     def commit(self):
-        self.messages = []
-        if self._tx != TX_ENDPOINT:
-            self._http.request("POST", self._tx + "/commit" )
+        self._messages = []
+        pending = self._gather_pending()
+        
+        if self._tx != TX_ENDPOINT or len(pending) > 0:
+            payload = None
+            if len(pending) > 0:
+                payload = json.dumps( {'statements':[ { 'statement':s, 'parameters':p } for (s, p) in pending ]} )
+            self._http.request("POST", self._tx + "/commit", payload)
             self._tx = TX_ENDPOINT
             response = self._deserialize( self._http.getresponse() )
             self._handle_errors(response, self, None)
 
     def rollback(self):
-        self.messages = []
+        self._messages = []
+        self._gather_pending() # Just used to clear all pending requests
         if self._tx != TX_ENDPOINT:
             self._http.request("DELETE", self._tx )
             self._tx = TX_ENDPOINT
@@ -81,11 +88,13 @@ class Connection(object):
             self._handle_errors(response, self, None)
 
     def cursor(self):
-        self.messages = []
-        return Cursor( self, self._execute )
+        self._messages = []
+        cursor = Cursor( self._next_cursor_id(), self, self._execute )
+        self._cursors.add(cursor)
+        return cursor
 
     def close(self):
-        self.messages = []
+        self._messages = []
         if hasattr(self, '_http') and self._http != None:
             self._http.close()
             self._http = None
@@ -93,11 +102,27 @@ class Connection(object):
     def __del__(self):
         self.close()
 
+    @property
+    def messages(self):
+        return self._messages
+
+    def _next_cursor_id(self):
+        self._cursor_ids += 1
+        return self._cursor_ids
+
+    def _gather_pending(self):
+        pending = []
+        for cursor in self._cursors:
+            if len(cursor._pending) > 0:
+                pending.extend(cursor._pending)
+                cursor._pending = []
+        return pending
+
     def _handle_errors(self, response, owner, cursor):
         for error in response['errors']:
             ErrorClass = neo_code_to_error_class(error['code'])
-            error_value = error['code'] + ": " + error['message']
-            owner.messages.append( ( ErrorClass, error_value))
+            error_value = error['code'] + ": " + str(error['message'])
+            owner._messages.append( ( ErrorClass, error_value))
             owner.errorhandler(self, cursor, ErrorClass, error_value)
 
     def _execute( self, cursor, statements ):
@@ -119,6 +144,4 @@ class Connection(object):
         return response['results'][-1]
 
     def _deserialize(self, response):
-        r = json.loads(response.read().decode('utf-8'))
-        print(r)
-        return r
+        return json.loads(response.read().decode('utf-8'))
