@@ -32,11 +32,11 @@ def start_server():
         os.makedirs(BUILD_DIR)
 
     if not path(BUILD_DIR + '/neo4j-server.tar.gz').access(os.R_OK):
-        print "Downloading Neo4j Server"
+        print("Downloading Neo4j Server")
         urllib.urlretrieve ("http://download.neo4j.org/artifact?edition=community&version=%s&distribution=tarball" % NEO4J_VERSION, BUILD_DIR + "/neo4j-server.tar.gz")
 
     if not path(BUILD_DIR + '/neo4j-server').access(os.R_OK):
-        print "Unzipping Neo4j Server.."
+        print("Unzipping Neo4j Server..")
         tar = tarfile.open(BUILD_DIR + "/neo4j-server.tar.gz")
         tar.extractall(BUILD_DIR)
         tar.close()
