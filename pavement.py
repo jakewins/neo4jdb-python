@@ -21,12 +21,11 @@ setup(
     description='DB API 2.0 driver for the Neo4j graph database.',
     long_description=open('README.rst').read(),
     classifiers=[
-          'Programming Language :: Python :: 2.6',
-          'Programming Language :: Python :: 2.7',
-          'Programming Language :: Python :: 3.2',
-          'Programming Language :: Python :: 3.3',
-          ],
-    )
+      'Programming Language :: Python :: 2.6',
+      'Programming Language :: Python :: 2.7',
+      'Programming Language :: Python :: 3.2',
+      'Programming Language :: Python :: 3.3',
+    ],
 )
 
 BUILD_DIR = 'build'
