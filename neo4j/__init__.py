@@ -2,7 +2,7 @@
 from neo4j.connection import Connection
 
 apilevel = '2.0'
-threadsafety = 2
+threadsafety = 1
 
 # This is non-standard, it uses neos built-in params. 
 paramstyle = 'curly'
