@@ -14,7 +14,7 @@ setup(
     install_requires=[],
     url='https://github.com/jakewins/neo4jdb-python',
     description='DB API 2.0 driver for the Neo4j graph database.',
-    long_description=open('README').read(),
+    long_description=open('README.rst').read(),
 )
 
 BUILD_DIR = 'build'
