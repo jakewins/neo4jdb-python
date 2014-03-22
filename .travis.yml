@@ -1,0 +1,16 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
+# command to install dependencies
+install: 
+  - pip install paver
+  - paver sdist
+
+# command to run tests
+script:
+  - paver start_server
+  - paver nosetests
+  - paver stop_server
