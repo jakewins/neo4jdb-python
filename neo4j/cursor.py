@@ -122,6 +122,8 @@ class Cursor(object):
             pending = self._pending
             self._pending = []
             result = self._execute( self, pending )
+
             self._rows = result['data']
             self._rowcount = len(self._rows)
             self._description = [ (name, neo4j.MIXED, None, None, None, None, True) for name in result['columns'] ]
+            self._cursor = 0
