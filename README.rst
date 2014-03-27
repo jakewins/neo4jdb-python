@@ -2,7 +2,8 @@
 Neo4jDB
 =======
 
-Implements the Python DB API 2.0 for Neo4j, compatible with pyth 2.6, 2.7, 3.2 and 3.3.
+Implements the Python DB API 2.0 for Neo4j, compatible with python 2.6, 2.7,
+3.2 and 3.3 and Neo4j >= 2.0.0
 
 http://legacy.python.org/dev/peps/pep-0249/
 
