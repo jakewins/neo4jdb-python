@@ -2,6 +2,7 @@
 import json
 
 from neo4j.cursor import Cursor
+from neo4j.strings import ustr
 
 try:
     from http import client as http
@@ -121,7 +122,7 @@ class Connection(object):
     def _handle_errors(self, response, owner, cursor):
         for error in response['errors']:
             ErrorClass = neo_code_to_error_class(error['code'])
-            error_value = error['code'] + ": " + str(error['message'])
+            error_value = error['code'] + ": " + ustr(error['message'])
             owner._messages.append( ( ErrorClass, error_value))
             owner.errorhandler(self, cursor, ErrorClass, error_value)
 
@@ -131,17 +132,24 @@ class Connection(object):
         statement should be a tuple of (statement, params).
         '''
         payload = [ { 'statement':s, 'parameters':p } for (s, p) in statements ]
-        self._http.request("POST", self._tx, json.dumps( {'statements':payload} ) )
+        self._http.request("POST", self._tx,\
+            json.dumps( {'statements':payload},\
+            {"Content-Type":"application/json", "Accept":"application/json"}))
         
         http_response = self._http.getresponse()
-
+        
+        if not http_response.status in [200, 201]:
+            raise Connection.OperationalError("Server returned unexpected response: " + ustr(http_response.status) + ustr(http_response.read()))
+        
         if self._tx == TX_ENDPOINT:
             self._tx = http_response.getheader('Location')
-
+        
         response = self._deserialize( http_response )
         self._handle_errors(response, cursor, cursor)
-
+        
         return response['results'][-1]
 
     def _deserialize(self, response):
+        # TODO: This is exceptionally annoying, python 3 has improved byte array handling, but that means the JSON parser
+        # no longer supports deserializing these things in a streaming manner, so we have to decode the whole thing first.
         return json.loads(response.read().decode('utf-8'))
