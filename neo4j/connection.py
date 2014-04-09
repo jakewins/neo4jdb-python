@@ -56,7 +56,9 @@ class Connection(object):
         pass
 
     class NotSupportedError(DatabaseError):
-        pass    
+        pass 
+
+    _COMMON_HEADERS = {"Content-Type":"application/json", "Accept":"application/json", "Connection":"keep-alive"}
 
     def __init__(self, dbUri):
         self.errorhandler = default_error_handler
@@ -73,19 +75,17 @@ class Connection(object):
         if self._tx != TX_ENDPOINT or len(pending) > 0:
             payload = None
             if len(pending) > 0:
-                payload = json.dumps( {'statements':[ { 'statement':s, 'parameters':p } for (s, p) in pending ]} )
-            self._http.request("POST", self._tx + "/commit", payload)
+                payload = {'statements':[ { 'statement':s, 'parameters':p } for (s, p) in pending ]}
+            response = self._deserialize( self._http_req("POST", self._tx + "/commit", payload) )
             self._tx = TX_ENDPOINT
-            response = self._deserialize( self._http.getresponse() )
             self._handle_errors(response, self, None)
 
     def rollback(self):
         self._messages = []
         self._gather_pending() # Just used to clear all pending requests
         if self._tx != TX_ENDPOINT:
-            self._http.request("DELETE", self._tx )
             self._tx = TX_ENDPOINT
-            response = self._deserialize( self._http.getresponse() )
+            response = self._deserialize( self._http_req("DELETE", self._tx) )
             self._handle_errors(response, self, None)
 
     def cursor(self):
@@ -132,15 +132,9 @@ class Connection(object):
         statement should be a tuple of (statement, params).
         '''
         payload = [ { 'statement':s, 'parameters':p } for (s, p) in statements ]
-        self._http.request("POST", self._tx,\
-            json.dumps( {'statements':payload},\
-            {"Content-Type":"application/json", "Accept":"application/json"}))
         
-        http_response = self._http.getresponse()
-        
-        if not http_response.status in [200, 201]:
-            raise Connection.OperationalError("Server returned unexpected response: " + ustr(http_response.status) + ustr(http_response.read()))
-        
+        http_response = self._http_req("POST", self._tx, {'statements':payload})
+       
         if self._tx == TX_ENDPOINT:
             self._tx = http_response.getheader('Location')
         
@@ -148,6 +142,20 @@ class Connection(object):
         self._handle_errors(response, cursor, cursor)
         
         return response['results'][-1]
+
+    def _http_req(self, method, path, payload=None):
+        payload = json.dumps(payload) if payload is not None else None
+        self._http.request("POST", self._tx, payload, self._COMMON_HEADERS)
+        
+        try:
+            http_response = self._http.getresponse() 
+        except http.BadStatusLine:
+            raise Connection.OperationalError("This connection has expired.")
+
+        if not http_response.status in [200, 201]:
+            raise Connection.OperationalError("Server returned unexpected response: " + ustr(http_response.status) + ustr(http_response.read()))
+        
+        return http_response
 
     def _deserialize(self, response):
         # TODO: This is exceptionally annoying, python 3 has improved byte array handling, but that means the JSON parser
