@@ -62,7 +62,8 @@ class Connection(object):
 
     def __init__(self, dbUri):
         self.errorhandler = default_error_handler
-        self._http = http.HTTPConnection(urlparse(dbUri).netloc)
+        self._host = urlparse(dbUri).netloc;
+        self._http = http.HTTPConnection(self._host)
         self._tx  = TX_ENDPOINT
         self._messages = []
         self._cursors = set()
@@ -84,8 +85,8 @@ class Connection(object):
         self._messages = []
         self._gather_pending() # Just used to clear all pending requests
         if self._tx != TX_ENDPOINT:
-            self._tx = TX_ENDPOINT
             response = self._deserialize( self._http_req("DELETE", self._tx) )
+            self._tx = TX_ENDPOINT
             self._handle_errors(response, self, None)
 
     def cursor(self):
@@ -132,24 +133,28 @@ class Connection(object):
         statement should be a tuple of (statement, params).
         '''
         payload = [ { 'statement':s, 'parameters':p } for (s, p) in statements ]
-        
         http_response = self._http_req("POST", self._tx, {'statements':payload})
-       
+        
         if self._tx == TX_ENDPOINT:
             self._tx = http_response.getheader('Location')
         
         response = self._deserialize( http_response )
+
         self._handle_errors(response, cursor, cursor)
         
         return response['results'][-1]
 
-    def _http_req(self, method, path, payload=None):
+    def _http_req(self, method, path, payload=None, retries=2):
         payload = json.dumps(payload) if payload is not None else None
-        self._http.request("POST", self._tx, payload, self._COMMON_HEADERS)
+
+        self._http.request(method, path, payload, self._COMMON_HEADERS)
         
         try:
             http_response = self._http.getresponse() 
         except http.BadStatusLine:
+            self._http = http.HTTPConnection(self._host)
+            if retries > 0:
+                return self._http_req( method, path, payload, retries-1 )
             raise Connection.OperationalError("This connection has expired.")
 
         if not http_response.status in [200, 201]:
