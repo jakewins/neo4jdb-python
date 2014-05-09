@@ -145,9 +145,9 @@ class Connection(object):
         return response['results'][-1]
 
     def _http_req(self, method, path, payload=None, retries=2):
-        payload = json.dumps(payload) if payload is not None else None
+        serialized_payload = json.dumps(payload) if payload is not None else None
 
-        self._http.request(method, path, payload, self._COMMON_HEADERS)
+        self._http.request(method, path, serialized_payload, self._COMMON_HEADERS)
         
         try:
             http_response = self._http.getresponse() 
