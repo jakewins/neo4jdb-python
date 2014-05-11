@@ -29,10 +29,10 @@ def default_error_handler(connection, cursor, errorclass, errorvalue):
 class Connection(object):
 
     class Error(StandardError):
-        pass
+        rollback = True
 
     class Warning(StandardError):
-        pass
+        rollback = False
 
     class InterfaceError(Error):
         pass
@@ -47,10 +47,10 @@ class Connection(object):
         pass
 
     class ProgrammingError(DatabaseError):
-        pass
+        rollback = False
 
     class IntegrityError(DatabaseError):
-        pass
+        rollback = False
 
     class DataError(DatabaseError):
         pass
@@ -120,13 +120,6 @@ class Connection(object):
                 cursor._pending = []
         return pending
 
-    def _handle_errors(self, response, owner, cursor):
-        for error in response['errors']:
-            ErrorClass = neo_code_to_error_class(error['code'])
-            error_value = error['code'] + ": " + ustr(error['message'])
-            owner._messages.append( ( ErrorClass, error_value))
-            owner.errorhandler(self, cursor, ErrorClass, error_value)
-
     def _execute( self, cursor, statements ):
         '''
         Executes a list of statements, returning an iterator of results sets. Each 
@@ -137,7 +130,7 @@ class Connection(object):
         
         if self._tx == TX_ENDPOINT:
             self._tx = http_response.getheader('Location')
-        
+
         response = self._deserialize( http_response )
 
         self._handle_errors(response, cursor, cursor)
@@ -155,12 +148,25 @@ class Connection(object):
             self._http = http.HTTPConnection(self._host)
             if retries > 0:
                 return self._http_req( method, path, payload, retries-1 )
-            raise Connection.OperationalError("This connection has expired.")
+            self._handle_error(self, self, None, Connection.OperationalError, "Connection has expired.")
 
         if not http_response.status in [200, 201]:
-            raise Connection.OperationalError("Server returned unexpected response: " + ustr(http_response.status) + ustr(http_response.read()))
+            self._handle_error(self, self, None, Connection.OperationalError, "Server returned unexpected response: " + ustr(http_response.status) + ustr(http_response.read()))
         
         return http_response
+
+    def _handle_errors(self, response, owner, cursor):
+        for error in response['errors']:
+            ErrorClass = neo_code_to_error_class(error['code'])
+            error_value = ustr(error['code']) + ": " + ustr(error['message'])
+            self._handle_error(owner, cursor, ErrorClass, error_value)
+
+    def _handle_error(self, owner, cursor, ErrorClass, error_value):
+        if ErrorClass.rollback:
+            self._tx = TX_ENDPOINT
+            self._gather_pending() # Just used to clear all pending requests
+        owner._messages.append( ( ErrorClass, error_value))
+        owner.errorhandler(self, cursor, ErrorClass, error_value)
 
     def _deserialize(self, response):
         # TODO: This is exceptionally annoying, python 3 has improved byte array handling, but that means the JSON parser

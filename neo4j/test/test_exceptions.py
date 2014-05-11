@@ -1,6 +1,7 @@
 import unittest
 
 import neo4j
+import json
 
 class TestExceptions(unittest.TestCase):
 
@@ -36,8 +37,6 @@ class TestExceptions(unittest.TestCase):
 
         # Then
         self.assertEqual(cursor.messages, [])
-
-
 
 if __name__ == '__main__':
     unittest.main()

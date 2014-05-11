@@ -120,7 +120,13 @@ class Cursor(object):
     def _execute_pending(self):
         if len(self._pending) > 0:
             pending = self._pending
+
+            # Clear these, in case the request fails.
             self._pending = []
+            self._rows = []
+            self._rowcount = 0
+            self._description = []
+
             result = self._execute( self, pending )
 
             self._rows = result['data']
