@@ -53,18 +53,23 @@ class Neo4jDBConnectionManager():
     def write(self):
         try:
             yield self.connection.cursor()
-        except Connection.Error:
+        except Connection.Error as e:
             self.connection.rollback()
-        finally:
+            raise e
+        else:
             self.connection.commit()
+        finally:
+            pass
 
     @contextmanager
     def transaction(self):
         connection = Connection(self.dsn)
         try:
             yield connection.cursor()
-        except Connection.Error:
+        except Connection.Error as e:
             connection.rollback()
-        finally:
+            raise e
+        else:
             connection.commit()
+        finally:
             connection.close()
