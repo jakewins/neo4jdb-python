@@ -148,10 +148,10 @@ class Connection(object):
             self._http = http.HTTPConnection(self._host)
             if retries > 0:
                 return self._http_req( method, path, payload, retries-1 )
-            self._handle_error(self, self, None, Connection.OperationalError, "Connection has expired.")
+            self._handle_error(self, None, Connection.OperationalError, "Connection has expired.")
 
         if not http_response.status in [200, 201]:
-            self._handle_error(self, self, None, Connection.OperationalError, "Server returned unexpected response: " + ustr(http_response.status) + ustr(http_response.read()))
+            self._handle_error(self, None, Connection.OperationalError, "Server returned unexpected response: " + ustr(http_response.status) + ustr(http_response.read()))
         
         return http_response
 
