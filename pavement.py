@@ -29,7 +29,7 @@ setup(
 )
 
 BUILD_DIR = 'build'
-NEO4J_VERSION = '2.0.1'
+NEO4J_VERSION = '2.0.3'
 
 @task
 @needs('generate_setup', 'minilib', 'setuptools.command.sdist')
