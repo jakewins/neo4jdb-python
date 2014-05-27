@@ -45,9 +45,48 @@ for the DB API for detailed usage.
 
     # With positional parameters
     cursor.execute("CREATE (n:User {name:{0}})", "Bob")
+    # or
+    l = ['Bob']
+    cursor.execute("CREATE (n:User {name:{0}})", *l)
 
     # With named parameters
-    cursor.execute("CREATE (n:User {name:{name}})", name="Bob")   
+    cursor.execute("CREATE (n:User {name:{name}})", name="Bob")
+    # or
+    d = {'name': 'Bob'}
+    cursor.execute("CREATE (n:User {name:{name}})", **d)
+    # or
+    d = {'node': {'name': 'Bob'}}
+    cursor.execute("CREATE (n:User {node})", **d)
+
+Using the context manager. Any exception in the context will result in the exception being thrown and the transaction to be rolled back.
+
+::
+
+    from neo4j.contextmanager import Neo4jDBConnectionManager
+    manager = contextmanager.Neo4jDBConnectionManager('http://localhost:7474')
+
+    with manager.read as r:  # r is just a cursor
+        for name, age in r.execute("MATCH (n:User) RETURN n.name, n.age"):
+            print name, age
+    # When leaving read context the transaction will be rolled back
+
+    with manager.write as w:
+        w.execute("CREATE (n:User {name:{name}})", name="Bob")
+    # When leaving write context the transaction will be committed
+
+    # When using transaction a new connection will be created
+    with manager.transaction as t:
+        t.execute("CREATE (n:User {name:{name}})", name="Bob")
+    # When leaving transaction context the transaction will be
+    # committed and the connection will be closed
+
+    # Rolling back or commit in contexts
+    with manager.transaction as t:
+        t.execute("CREATE (n:User {name:{name}})", name="Bob")
+        if something == True:
+            t.connection.commit()  # This will commit the transaction
+        else:
+            t.connection.rollback()  # This will rollback the transaction
 
 
 Building & Testing
