@@ -140,11 +140,10 @@ class Connection(object):
     def _http_req(self, method, path, payload=None, retries=2):
         serialized_payload = json.dumps(payload) if payload is not None else None
 
-        self._http.request(method, path, serialized_payload, self._COMMON_HEADERS)
-        
         try:
-            http_response = self._http.getresponse() 
-        except http.BadStatusLine:
+            self._http.request(method, path, serialized_payload, self._COMMON_HEADERS)
+            http_response = self._http.getresponse()
+        except (http.BadStatusLine, http.CannotSendRequest):
             self._http = http.HTTPConnection(self._host)
             if retries > 0:
                 return self._http_req( method, path, payload, retries-1 )
