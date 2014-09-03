@@ -2,6 +2,7 @@ import unittest
 
 import neo4j
 
+
 class TestConnection(unittest.TestCase):
 
     def setUp(self):
@@ -29,7 +30,7 @@ class TestConnection(unittest.TestCase):
         # Given
         cursor = self.conn.cursor()
         cursor.execute("CREATE (n:TestCommit {name:1337})")
-        cursor.rowcount # Force client to execute
+        cursor.rowcount  # Force client to execute
 
         # When
         self.conn.commit()

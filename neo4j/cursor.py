@@ -1,6 +1,7 @@
 
 import neo4j
 
+
 class Cursor(object):
 
     def __init__( self, cursorid, connection, execute_statements ):
@@ -18,7 +19,7 @@ class Cursor(object):
         self._cursor = 0
         self._messages = []
 
-    def execute( self, statement, *args, **kwargs ):
+    def execute(self, statement, *args, **kwargs):
         for i in range(len(args)):
             kwargs[i] = args[i]
 
@@ -39,13 +40,13 @@ class Cursor(object):
         self._execute_pending()
         if size is None:
             size = self.arraysize
-        result = [ tuple(r['row']) for r in self._rows[self._cursor:self._cursor + size] ]
+        result = [tuple(r['row']) for r in self._rows[self._cursor:self._cursor + size]]
         self._cursor += size
         return result
 
     def fetchall(self):
         self._execute_pending()
-        result = [ tuple(r['row']) for r in self._rows[self._cursor:] ]
+        result = [tuple(r['row']) for r in self._rows[self._cursor:]]
         self._cursor += self.rowcount
         return result
 
@@ -65,7 +66,7 @@ class Cursor(object):
     def scroll(self, value, mode='relative'):
         self._execute_pending()
         if value < 0:
-            raise connection.NotSupportedError()
+            raise self.connection.NotSupportedError()
         if mode == 'relative':
             self._cursor += value
         elif mode == 'absolute':
@@ -74,9 +75,6 @@ class Cursor(object):
         if self._cursor >= self.rowcount:
             self._cursor = self.rowcount
             raise IndexError()
-
-    def close(self):
-        self.connection._cursors.discard(self)
 
     @property
     def description(self):
@@ -93,7 +91,7 @@ class Cursor(object):
         self._execute_pending()
         return self._messages
 
-    def nextset( self ):
+    def nextset(self):
         pass
 
     def setinputsizes(self, sizes):
@@ -107,6 +105,7 @@ class Cursor(object):
         self._rowcount = -1
         self._messages = []
         self._description = None
+        self.connection._cursors.discard(self)
 
     def __del__(self):
         self.close()
@@ -127,9 +126,9 @@ class Cursor(object):
             self._rowcount = 0
             self._description = []
 
-            result = self._execute( self, pending )
+            result = self._execute(self, pending)
 
             self._rows = result['data']
             self._rowcount = len(self._rows)
-            self._description = [ (name, neo4j.MIXED, None, None, None, None, True) for name in result['columns'] ]
+            self._description = [(name, neo4j.MIXED, None, None, None, None, True) for name in result['columns']]
             self._cursor = 0

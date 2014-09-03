@@ -7,8 +7,9 @@ threadsafety = 1
 # This is non-standard, it uses neos built-in params. 
 paramstyle = 'curly'
 
-def connect( dsn ):
-    return Connection( dsn )
+
+def connect(dsn):
+    return Connection(dsn)
 
 #
 # Types
@@ -20,6 +21,7 @@ def connect( dsn ):
 # by the spec, since the transport format is JSON. This will change
 # when the transport format changes.
 #
+
 
 class TypeCode(object):
     
@@ -38,38 +40,39 @@ class TypeCode(object):
     def __str__(self):
         return self._code
 
+
 class TypeObject(object):
     
     def __init__(self, *args, **kwargs):
         raise NotSupportedError("Complex types are not yet supported.")
 
-Date               = TypeObject
-Time               = TypeObject
-Timestamp          = TypeObject
-DateFromTicks      = TypeObject
-TimeFromTicks      = TypeObject
+Date = TypeObject
+Time = TypeObject
+Timestamp = TypeObject
+DateFromTicks = TypeObject
+TimeFromTicks = TypeObject
 TimestampFromTicks = TypeObject
-Binary             = TypeObject
+Binary = TypeObject
 
-STRING   = TypeCode( "STRING"   )
-BINARY   = TypeCode( "BINARY"   ) 
-NUMBER   = TypeCode( "NUMBER"   )
-DATETIME = TypeCode( "DATETIME" )
-ROWID    = TypeCode( "ROWID"    )
+STRING = TypeCode("STRING")
+BINARY = TypeCode("BINARY")
+NUMBER = TypeCode("NUMBER")
+DATETIME = TypeCode("DATETIME")
+ROWID = TypeCode("ROWID")
 
-MIXED      = TypeCode( "MIXED" )
+MIXED = TypeCode("MIXED")
 
 #
 # Exceptions 
 #
 
-Error             = Connection.Error
-Warning           = Connection.Warning
-InterfaceError    = Connection.InterfaceError
-DatabaseError     = Connection.DatabaseError
-InternalError     = Connection.InternalError
-OperationalError  = Connection.OperationalError
-ProgrammingError  = Connection.ProgrammingError
-IntegrityError    = Connection.IntegrityError
-DataError         = Connection.DataError
+Error = Connection.Error
+Warning = Connection.Warning
+InterfaceError = Connection.InterfaceError
+DatabaseError = Connection.DatabaseError
+InternalError = Connection.InternalError
+OperationalError = Connection.OperationalError
+ProgrammingError = Connection.ProgrammingError
+IntegrityError = Connection.IntegrityError
+DataError = Connection.DataError
 NotSupportedError = Connection.NotSupportedError
