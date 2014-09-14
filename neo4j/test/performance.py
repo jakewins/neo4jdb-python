@@ -2,9 +2,9 @@
 import neo4j
 import time
 
+
 def main():
     conn = neo4j.connect("http://localhost:7474")
-    
     start = time.time()
     iterations = 1000
     for it in xrange(iterations):

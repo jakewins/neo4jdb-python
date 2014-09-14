@@ -2,6 +2,7 @@ import unittest
 
 import neo4j
 
+
 class TestCursor(unittest.TestCase):
 
     def setUp(self):
@@ -15,10 +16,11 @@ class TestCursor(unittest.TestCase):
         cursor.execute("CREATE (n) RETURN 1 AS hello, 'str' AS str, 3")
 
         # Then
-        self.assertEqual(cursor.description, [\
-            ('hello', neo4j.MIXED, None, None, None, None, True),\
-            ('str',   neo4j.MIXED, None, None, None, None, True),\
-            ('3',     neo4j.MIXED, None, None, None, None, True)])
+        self.assertEqual(cursor.description, [
+            ('hello', neo4j.MIXED, None, None, None, None, True),
+            ('str',   neo4j.MIXED, None, None, None, None, True),
+            ('3',     neo4j.MIXED, None, None, None, None, True)
+        ])
 
     def test_positional_parameters(self):
         # Given
@@ -28,8 +30,7 @@ class TestCursor(unittest.TestCase):
         cursor.execute("CREATE (n:Params {name:{0}})", "Bob")
 
         # Then
-        self.assertEqual(list(cursor.execute("MATCH (n:Params) RETURN n")),\
-            [({'name': 'Bob'},)])
+        self.assertEqual(list(cursor.execute("MATCH (n:Params) RETURN n")), [({'name': 'Bob'},)])
 
     def test_named_parameters(self):
         # Given
@@ -39,8 +40,7 @@ class TestCursor(unittest.TestCase):
         cursor.execute("CREATE (n:Params {name:{name}})", name="Bob")
 
         # Then
-        self.assertEqual(list(cursor.execute("MATCH (n:Params) RETURN n")),\
-            [({'name': 'Bob'},)])
+        self.assertEqual(list(cursor.execute("MATCH (n:Params) RETURN n")), [({'name': 'Bob'},)])
 
     def test_fetch_one(self):
         # Given
@@ -51,7 +51,7 @@ class TestCursor(unittest.TestCase):
 
         # Then
         self.assertEqual(cursor.rowcount, 1)
-        self.assertEqual(cursor.fetchone(), (1,2,3))
+        self.assertEqual(cursor.fetchone(), (1, 2, 3))
 
     def test_fetch_many(self):
         # Given
@@ -98,7 +98,7 @@ class TestCursor(unittest.TestCase):
         cells = []
         for cell, in cursor:
             cells.append(cell)
-        self.assertEqual(cells, [1,2,3,4,5,6,7])
+        self.assertEqual(cells, [1, 2, 3, 4, 5, 6, 7])
         self.assertEqual(cursor.fetchall(), [])
 
     def test_scroll(self):
@@ -129,7 +129,7 @@ class TestCursor(unittest.TestCase):
         try:
             cursor.scroll(10)
             raise Exception("Should not have reached here.")
-        except IndexError as e:
+        except IndexError:
             # Then
             pass
 
