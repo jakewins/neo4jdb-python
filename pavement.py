@@ -30,7 +30,7 @@ setup(
 )
 
 BUILD_DIR = 'build'
-NEO4J_VERSION = '2.1.3'
+NEO4J_VERSION = '2.1.5'
 
 
 @task
