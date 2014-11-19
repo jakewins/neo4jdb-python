@@ -32,7 +32,6 @@ setup(
 BUILD_DIR = 'build'
 NEO4J_VERSION = '2.1.5'
 
-
 @task
 @needs('generate_setup', 'minilib', 'setuptools.command.sdist')
 def sdist():

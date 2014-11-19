@@ -22,6 +22,26 @@ def connect(dsn):
 # when the transport format changes.
 #
 
+class Node(dict):
+
+    def __init__(self, node_id, labels, properties):
+        self.id = node_id
+        self.labels = labels
+        for k,v in properties.items():
+            self[k] = v
+
+
+class Relationship(dict):
+
+    def __init__(self, rel_id, rel_type, start_node_id, end_node_id, properties):
+        self.id = rel_id
+        self.type = rel_type
+        self.start_id = start_node_id
+        self.end_id = end_node_id
+        
+        for k,v in properties.items():
+            self[k] = v
+    
 
 class TypeCode(object):
     

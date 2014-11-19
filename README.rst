@@ -58,6 +58,23 @@ for the DB API for detailed usage.
     d = {'node': {'name': 'Bob'}}
     cursor.execute("CREATE (n:User {node})", **d)
 
+
+If you ask Cypher to return Nodes or Relationships, these are represented as Node and Relationship types, which
+are `dict` objects with additional metadata for id, labels, type, end_id and start_id.
+
+::
+
+    # Retrieve and access a node
+    for node, in cursor.execute("MATCH (n) RETURN n"):
+        print node.id, node.labels
+        print node['a_property']
+
+    # Retrieve and access a relationship
+    for rel, in cursor.execute("MATCH ()-[r]->() RETURN r"):
+        print rel.id, rel.type, rel.start_id, rel.end_id
+        print rel['a_property']
+
+
 Using the context manager. Any exception in the context will result in the exception being thrown and the transaction to be rolled back.
 
 ::

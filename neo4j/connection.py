@@ -128,7 +128,7 @@ class Connection(object):
         Executes a list of statements, returning an iterator of results sets. Each 
         statement should be a tuple of (statement, params).
         """
-        payload = [{'statement': s, 'parameters': p} for (s, p) in statements]
+        payload = [{'statement': s, 'parameters': p, 'resultDataContents':['rest']} for (s, p) in statements]
         http_response = self._http_req("POST", self._tx, {'statements': payload})
 
         if self._tx == TX_ENDPOINT:

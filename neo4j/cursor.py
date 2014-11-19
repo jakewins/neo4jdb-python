@@ -1,5 +1,6 @@
 
 import neo4j
+from neo4j.strings import ustr
 
 
 class Cursor(object):
@@ -34,19 +35,19 @@ class Cursor(object):
         self._execute_pending()
         row = self._rows[self._cursor]
         self._cursor += 1
-        return tuple(row['row'])
+        return self._map_row(row['rest'])
 
     def fetchmany(self, size=None):
         self._execute_pending()
         if size is None:
             size = self.arraysize
-        result = [tuple(r['row']) for r in self._rows[self._cursor:self._cursor + size]]
+        result = [self._map_row(r['rest']) for r in self._rows[self._cursor:self._cursor + size]]
         self._cursor += size
         return result
 
     def fetchall(self):
         self._execute_pending()
-        result = [tuple(r['row']) for r in self._rows[self._cursor:]]
+        result = [self._map_row(r['rest']) for r in self._rows[self._cursor:]]
         self._cursor += self.rowcount
         return result
 
@@ -115,6 +116,38 @@ class Cursor(object):
 
     def __eq__(self, other):
         return self._id == other._id
+
+    def _map_row(self, row):
+        return tuple(self._map_value(row))
+
+    def _map_value(self, value):
+        ''' Maps a raw deserialized row to proper types '''
+        # TODO: Once we've gotten here, we've done the following:
+        # -> Recieve the full response, copy it from network buffer it into a ByteBuffer (copy 1)
+        # -> Copy all the data into a String (copy 2)
+        # -> Deserialize that string (copy 3)
+        # -> Map the deserialized JSON to our response format (copy 4, what we are doing in this method)
+        # This should not bee needed. Technically, this mapping from transport format to python types should require exactly one copy, 
+        # from the network buffer into the python VM.
+        if isinstance(value, list):
+            out = []
+            for c in value:
+                out.append(self._map_value( c ))
+            return out
+        elif isinstance(value, dict) and 'metadata' in value and 'labels' in value['metadata'] and 'self' in value:
+            return neo4j.Node(ustr(value['metadata']['id']), value['metadata']['labels'], value['data'])
+        elif isinstance(value, dict) and 'metadata' in value and 'type' in value and 'self' in value:
+            return neo4j.Relationship(ustr(value['metadata']['id']), value['type'], value['start'].split('/')[-1], value['end'].split('/')[-1], value['data'])
+        elif isinstance(value, dict):
+            out = {}
+            for k,v in value.items():
+                out[k] = self._map_value( v )
+            return out
+        elif isinstance(value, str):
+            return ustr(value)
+        else:
+            return value
+
 
     def _execute_pending(self):
         if len(self._pending) > 0:
