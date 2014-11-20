@@ -44,21 +44,19 @@ def start_server():
     if not os.path.exists(BUILD_DIR):
         os.makedirs(BUILD_DIR)
 
-    if not path(BUILD_DIR + '/neo4j-server.tar.gz').access(os.R_OK):
+    if not path(BUILD_DIR + '/neo4j.tar.gz').access(os.R_OK):
         print("Downloading Neo4j Server")
-        urlretrieve("http://download.neo4j.org/artifact?edition=community&version=%s&distribution=tarball" % NEO4J_VERSION, BUILD_DIR + "/neo4j-server.tar.gz")
+        urlretrieve("http://dist.neo4j.org/neo4j-community-%s-unix.tar.gz" % NEO4J_VERSION, BUILD_DIR + "/neo4j.tar.gz")
 
-    if not path(BUILD_DIR + '/neo4j-server').access(os.R_OK):
+    if not path(BUILD_DIR + '/neo4j').access(os.R_OK):
         print("Unzipping Neo4j Server..")
-        tar = tarfile.open(BUILD_DIR + "/neo4j-server.tar.gz")
-        tar.extractall(BUILD_DIR)
-        tar.close()
-        os.rename(BUILD_DIR + "/neo4j-community-%s" % NEO4J_VERSION, BUILD_DIR + "/neo4j-server")
+        call(['tar','-xf', BUILD_DIR + "/neo4j.tar.gz", '-C', BUILD_DIR])
+        os.rename(BUILD_DIR + "/neo4j-community-%s" % NEO4J_VERSION, BUILD_DIR + "/neo4j")
 
-    call([BUILD_DIR + "/neo4j-server/bin/neo4j", "start"])
+    call([BUILD_DIR + "/neo4j/bin/neo4j", "start"])
 
 
 @task
 def stop_server():
-    if path(BUILD_DIR + '/neo4j-server').access(os.R_OK):
-        call([BUILD_DIR + "/neo4j-server/bin/neo4j", "stop"])
+    if path(BUILD_DIR + '/neo4j').access(os.R_OK):
+        call([BUILD_DIR + "/neo4j/bin/neo4j", "stop"])
