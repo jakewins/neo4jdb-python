@@ -11,6 +11,8 @@ except NameError:
             return s.decode(encoding)
         except AttributeError:
             return str(s)
+
+    unicode_type = str
 else:
     # Python 2
     def ustr(s, encoding="utf-8"):
@@ -18,3 +20,5 @@ else:
             return s.decode(encoding)
         else:
             return unicode(s)
+
+    unicode_type = unicode

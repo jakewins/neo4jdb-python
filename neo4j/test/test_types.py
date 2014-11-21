@@ -1,6 +1,7 @@
 import unittest
 
 import neo4j
+from neo4j.strings import unicode_type
 
 
 class TestTypes(unittest.TestCase):
@@ -53,14 +54,14 @@ class TestTypes(unittest.TestCase):
 
         self.assertEqual(rel.type, 'KNOWS')
         self.assertEqual(rel['name'], "Bob")
-        
-        self.assertTrue( isinstance(rel.start_id, unicode) )
-        self.assertTrue( isinstance(rel.end_id, unicode) )
-        self.assertTrue( isinstance(rel.id, unicode) )
+
+        self.assertTrue( isinstance(rel.start_id, unicode_type) )
+        self.assertTrue( isinstance(rel.end_id, unicode_type) )
+        self.assertTrue( isinstance(rel.id, unicode_type) )
 
         self.assertEqual(node.labels, ['Types'])
         self.assertEqual(node['name'], "Bob")
-        self.assertTrue( isinstance(node.id, unicode) )
+        self.assertTrue( isinstance(node.id, unicode_type) )
 
 
 
