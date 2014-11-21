@@ -53,7 +53,7 @@ class TestTypes(unittest.TestCase):
 
         self.assertEqual(rel.type, 'KNOWS')
         self.assertEqual(rel['name'], "Bob")
-        print rel.start_id, rel.start_id.__class__
+        
         self.assertTrue( isinstance(rel.start_id, unicode) )
         self.assertTrue( isinstance(rel.end_id, unicode) )
         self.assertTrue( isinstance(rel.id, unicode) )
