@@ -93,9 +93,14 @@ class Connection(object):
         self._messages = []
         self._gather_pending()  # Just used to clear all pending requests
         if self._tx != TX_ENDPOINT:
-            response = self._deserialize(self._http_req("DELETE", self._tx))
-            self._tx = TX_ENDPOINT
-            self._handle_errors(response, self, None)
+            try:
+                response = self._deserialize(self._http_req("DELETE", self._tx))
+                self._tx = TX_ENDPOINT
+                self._handle_errors(response, self, None)
+            except self.OperationalError:
+                # Neo.ClientError.Transaction.UnknownId
+                # Unrecognized transaction id. Transaction may have timed out and been rolled back.
+                pass
 
     def cursor(self):
         self._messages = []
