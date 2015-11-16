@@ -1,13 +1,17 @@
 import os
 import tarfile
+import base64
+import json
 from subprocess import call
 from paver.easy import *
 from paver.setuputils import setup, find_packages
 
 try:
+    from http import client as http
     from urllib.request import urlretrieve
 except ImportError:
     from urllib import urlretrieve
+    import httplib as http
 
 setup(
     name='neo4jdb',
@@ -30,7 +34,9 @@ setup(
 )
 
 BUILD_DIR = 'build'
-NEO4J_VERSION = '2.1.5'
+NEO4J_VERSION = '2.3.1'
+DEFAULT_USERNAME = 'neo4j'
+DEFAULT_PASSWORD = 'neo4j'
 
 @task
 @needs('generate_setup', 'minilib', 'setuptools.command.sdist')
@@ -54,9 +60,31 @@ def start_server():
         os.rename(BUILD_DIR + "/neo4j-community-%s" % NEO4J_VERSION, BUILD_DIR + "/neo4j")
 
     call([BUILD_DIR + "/neo4j/bin/neo4j", "start"])
+    change_password()
 
 
 @task
 def stop_server():
     if path(BUILD_DIR + '/neo4j').access(os.R_OK):
         call([BUILD_DIR + "/neo4j/bin/neo4j", "stop"])
+
+
+@task
+def change_password():
+    """
+    Changes the standard password from neo4j to testing to be able to run the test suite.
+    """
+    auth = base64.encodestring(DEFAULT_USERNAME + ":" + DEFAULT_PASSWORD).strip()
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": "Basic {}".format(auth)
+    }
+    con = http.HTTPConnection('localhost:7474', timeout=10)
+    con.request('GET', 'http://localhost:7474/user/neo4j', headers=headers)
+    response = json.loads(con.getresponse().read().decode('utf-8'))
+    if response.get('password_change_required', None):
+        payload = json.dumps({'password': 'testing'})
+        con.request('POST', 'http://localhost:7474/user/neo4j/password', payload, headers)
+    con.close()
+

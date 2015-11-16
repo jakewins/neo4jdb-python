@@ -5,6 +5,7 @@ import time
 
 def main():
     conn = neo4j.connect("http://localhost:7474")
+    conn.authorization('neo4j', 'testing')
     start = time.time()
     iterations = 10000
     for it in xrange(iterations):

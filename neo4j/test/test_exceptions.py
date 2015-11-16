@@ -7,6 +7,7 @@ class TestExceptions(unittest.TestCase):
 
     def setUp(self):
         self.conn = neo4j.connect("http://localhost:7474")
+        self.conn.authorization('neo4j', 'testing')
 
     def test_syntax_error(self):
         # Given
@@ -19,8 +20,8 @@ class TestExceptions(unittest.TestCase):
             raise Exception("Should not have reached here.")
         except neo4j.ProgrammingError as e:
             # Then
-            self.assertEqual(str(e), "Neo.ClientError.Statement.InvalidSyntax: Invalid input \'t\': expected <init> (line 1, column 1)\n\"this is not valid syntax\"\n ^")
-            self.assertEqual(cursor.messages, [(neo4j.ProgrammingError, "Neo.ClientError.Statement.InvalidSyntax: Invalid input \'t\': expected <init> (line 1, column 1)\n\"this is not valid syntax\"\n ^")])
+            self.assertEqual(str(e), "Neo.ClientError.Statement.InvalidSyntax: Invalid input \'t\': expected <init> (line 1, column 1 (offset: 0))\n\"this is not valid syntax\"\n ^")
+            self.assertEqual(cursor.messages, [(neo4j.ProgrammingError, "Neo.ClientError.Statement.InvalidSyntax: Invalid input \'t\': expected <init> (line 1, column 1 (offset: 0))\n\"this is not valid syntax\"\n ^")])
 
     def test_cursor_clears_errors(self):
         # Given
@@ -36,7 +37,8 @@ class TestExceptions(unittest.TestCase):
         cursor.execute("CREATE (n)")
 
         # Then
-        self.assertEqual(cursor.messages, [])
+        msg = cursor.messages
+        self.assertEqual(msg, [])
 
 if __name__ == '__main__':
     unittest.main()
