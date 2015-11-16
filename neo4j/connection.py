@@ -1,5 +1,6 @@
 
 import json
+import base64
 
 from neo4j.cursor import Cursor
 from neo4j.strings import ustr
@@ -71,6 +72,10 @@ class Connection(object):
         self._messages = []
         self._cursors = set()
         self._cursor_ids = 0
+
+    def authorization(self, username, password):
+        auth = base64.encodestring(username + ":" + password).strip()
+        self._COMMON_HEADERS.update({"Authorization": "Basic {}".format(auth)})
 
     def commit(self):
         self._messages = []
