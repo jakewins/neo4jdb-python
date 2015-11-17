@@ -74,8 +74,12 @@ class Connection(object):
         self._cursor_ids = 0
 
     def authorization(self, username, password):
-        auth = base64.encodestring(username + ":" + password).strip()
-        self._COMMON_HEADERS.update({"Authorization": "Basic {}".format(auth)})
+        basic_auth = '%s:%s' % (username, password)
+        try:  # Python 2
+            auth = base64.encodestring(basic_auth)
+        except TypeError:  # Python 3
+            auth = base64.encodestring(bytes(basic_auth, 'utf-8')).decode()
+        self._COMMON_HEADERS.update({"Authorization": "Basic %s" % auth.strip()})
 
     def commit(self):
         self._messages = []

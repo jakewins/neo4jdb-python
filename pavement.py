@@ -2,6 +2,7 @@ import os
 import tarfile
 import base64
 import json
+from time import sleep
 from subprocess import call
 from paver.easy import *
 from paver.setuputils import setup, find_packages
@@ -38,6 +39,7 @@ NEO4J_VERSION = '2.3.1'
 DEFAULT_USERNAME = 'neo4j'
 DEFAULT_PASSWORD = 'neo4j'
 
+
 @task
 @needs('generate_setup', 'minilib', 'setuptools.command.sdist')
 def sdist():
@@ -56,7 +58,7 @@ def start_server():
 
     if not path(BUILD_DIR + '/neo4j').access(os.R_OK):
         print("Unzipping Neo4j Server..")
-        call(['tar','-xf', BUILD_DIR + "/neo4j.tar.gz", '-C', BUILD_DIR])
+        call(['tar', '-xf', BUILD_DIR + "/neo4j.tar.gz", '-C', BUILD_DIR])
         os.rename(BUILD_DIR + "/neo4j-community-%s" % NEO4J_VERSION, BUILD_DIR + "/neo4j")
 
     call([BUILD_DIR + "/neo4j/bin/neo4j", "start"])
@@ -74,17 +76,35 @@ def change_password():
     """
     Changes the standard password from neo4j to testing to be able to run the test suite.
     """
-    auth = base64.encodestring(DEFAULT_USERNAME + ":" + DEFAULT_PASSWORD).strip()
+    basic_auth = '%s:%s' % (DEFAULT_USERNAME, DEFAULT_PASSWORD)
+    try:  # Python 2
+        auth = base64.encodestring(basic_auth)
+    except TypeError:  # Python 3
+        auth = base64.encodestring(bytes(basic_auth, 'utf-8')).decode()
+
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": "Basic {}".format(auth)
+        "Authorization": "Basic %s" % auth.strip()
     }
-    con = http.HTTPConnection('localhost:7474', timeout=10)
-    con.request('GET', 'http://localhost:7474/user/neo4j', headers=headers)
-    response = json.loads(con.getresponse().read().decode('utf-8'))
-    if response.get('password_change_required', None):
+    
+    response = None
+    retry = 0
+    while not response:  # Retry if the server is not ready yet
+        sleep(1)
+        con = http.HTTPConnection('localhost:7474', timeout=10)
+        try:
+            con.request('GET', 'http://localhost:7474/user/neo4j', headers=headers)
+            response = json.loads(con.getresponse().read().decode('utf-8'))
+        except ValueError:
+            con.close()
+        retry += 1
+        if retry > 10:
+            print("Could not change password for user neo4j")
+            break
+    if response and response.get('password_change_required', None):
         payload = json.dumps({'password': 'testing'})
         con.request('POST', 'http://localhost:7474/user/neo4j/password', payload, headers)
+        print("Password changed for user neo4j")
     con.close()
 
