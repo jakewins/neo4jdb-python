@@ -8,8 +8,11 @@ threadsafety = 1
 paramstyle = 'curly'
 
 
-def connect(dsn):
-    return Connection(dsn)
+def connect(dsn, username=None, password=None):
+    con = Connection(dsn)
+    if username and password:
+        con.authorization(username, password)
+    return con
 
 #
 # Types

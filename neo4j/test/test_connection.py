@@ -7,6 +7,7 @@ class TestConnection(unittest.TestCase):
 
     def setUp(self):
         self.conn = neo4j.connect("http://localhost:7474")
+        self.conn.authorization('neo4j', 'testing')
 
     def test_commit(self):
         # Given

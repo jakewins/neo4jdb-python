@@ -6,7 +6,7 @@ from neo4j.contextmanager import Neo4jDBConnectionManager
 class TestConnectionManager(unittest.TestCase):
 
     def setUp(self):
-        self.manager = Neo4jDBConnectionManager("http://localhost:7474")
+        self.manager = Neo4jDBConnectionManager("http://localhost:7474", "neo4j", "testing")
 
     def test_commit(self):
         # Given

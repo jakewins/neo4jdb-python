@@ -1,8 +1,8 @@
 from contextlib import contextmanager
-from neo4j.connection import Connection
+from neo4j import connect
 
 
-class Neo4jDBConnectionManager():
+class Neo4jDBConnectionManager:
 
     """
     Every new connection is a transaction. To minimize new connection overhead for many reads we try to reuse a single
@@ -38,9 +38,9 @@ class Neo4jDBConnectionManager():
     ...     w.execute("CREATE (TheMatrix:Movie {title:'Matrix Revolutions', tagline:'Everything that has a beginning has an end.'})")
     """
 
-    def __init__(self, dsn):
+    def __init__(self, dsn, username=None, password=None):
         self.dsn = dsn
-        self.connection = Connection(dsn)
+        self.connection = connect(dsn, username, password)
 
     @contextmanager
     def _read(self):
@@ -57,7 +57,7 @@ class Neo4jDBConnectionManager():
         cursor = self.connection.cursor()
         try:
             yield cursor
-        except Connection.Error as e:
+        except self.connection.Error as e:
             cursor.close()
             self.connection.rollback()
             raise e
@@ -70,11 +70,11 @@ class Neo4jDBConnectionManager():
 
     @contextmanager
     def _transaction(self):
-        connection = Connection(self.dsn)
+        connection = connect(self.dsn)
         cursor = connection.cursor()
         try:
             yield cursor
-        except Connection.Error as e:
+        except self.connection.Error as e:
             connection.rollback()
             raise e
         else:
